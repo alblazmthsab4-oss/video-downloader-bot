@@ -1,5 +1,8 @@
 [phases.setup]
-nixPkgs = ["python311", "ffmpeg", "yt-dlp"]
+nixPkgs = ["python311", "ffmpeg"]
+
+[phases.install]
+cmds = ["pip install python-telegram-bot==21.3 yt-dlp --upgrade"]
 
 [start]
 cmd = "python telegram_downloader_bot.py"
