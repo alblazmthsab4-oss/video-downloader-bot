@@ -174,8 +174,8 @@ async def download_and_send(query, context: ContextTypes.DEFAULT_TYPE, fmt: str,
         # بناء أمر yt-dlp
         if fmt == "mp3":
             cmd = [
-                "yt-dlp",
-                "-x", "--audio-format", "mp3",
+    "/root/.venv/bin/yt-dlp",
+    "-x", "--audio-format", "mp3"
                 "--audio-quality", "0",
                 "-o", output_template,
                 "--no-playlist",
@@ -191,9 +191,8 @@ async def download_and_send(query, context: ContextTypes.DEFAULT_TYPE, fmt: str,
     f"/best"
                 )
             cmd = [
-                "yt-dlp",
-                "-f", fmt_selector,
-                "--merge-output-format", "mp4",
+    "/root/.venv/bin/yt-dlp",
+    "-x", "--audio-format", "mp3"
                 "-o", output_template,
                 "--no-playlist",
                 url
