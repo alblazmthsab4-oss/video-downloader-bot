@@ -20,7 +20,7 @@ from telegram.ext import (
 # ==================== الإعدادات ====================
 import os
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "8430195653:AAFboRTMriG9Eh5zFYvRHDe0697JfuUNAjk")
-ALLOWED_USER_ID = 1599638825  # 1599638825
+ALLOWED_USER_ID = 1599638825  
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -36,7 +36,7 @@ def is_authorized(user_id: int) -> bool:
 async def get_video_info(url: str) -> dict | None:
     try:
         result = subprocess.run(
-            ["yt-dlp", "--dump-json", "--no-playlist", url],
+    ["/root/.venv/bin/yt-dlp", "--dump-json", "--no-playlist", url],
             capture_output=True, text=True, timeout=30
         )
         if result.returncode == 0:
