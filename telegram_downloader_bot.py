@@ -185,9 +185,9 @@ async def download_and_send(query, context: ContextTypes.DEFAULT_TYPE, fmt: str,
                 fmt_selector = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
             else:
                 fmt_selector = (
-                    f"bestvideo[height<={quality}][ext=mp4]+bestaudio[ext=m4a]"
-                    f"/best[height<={quality}][ext=mp4]"
-                    f"/best[height<={quality}]"
+    f"bestvideo[height<={quality}]+bestaudio"
+    f"/best[height<={quality}]"
+    f"/best"
                 )
             cmd = [
                 "yt-dlp",
