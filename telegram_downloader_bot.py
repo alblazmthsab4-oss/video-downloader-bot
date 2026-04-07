@@ -19,7 +19,7 @@ from telegram.ext import (
 
 # ==================== الإعدادات ====================
 BOT_TOKEN = "8430195653:AAFboRTMriG9Eh5zFYvRHDe0697JfuUNAjk"
-ALLOWED_USER_ID = 1599638825  # معرّفك الشخصي فقط
+ALLOWED_USER_ID = 1599638825  # 1599638825
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
