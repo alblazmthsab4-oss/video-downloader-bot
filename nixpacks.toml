@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["python311", "ffmpeg"]
+nixPkgs = ["python311", "ffmpeg", "yt-dlp"]
 
 [start]
 cmd = "python telegram_downloader_bot.py"
