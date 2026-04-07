@@ -168,12 +168,13 @@ async def download_and_send(query, context: ContextTypes.DEFAULT_TYPE, fmt: str,
 
         if fmt == "mp3":
             cmd = [
-                YT_DLP,
-                "-x", "--audio-format", "mp3",
-                "--audio-quality", "0",
-                "-o", output_template,
-                "--no-playlist",
-                url
+    YT_DLP,
+    "-f", fmt_selector,
+    "--merge-output-format", "mp4",
+    "--remux-video", "mp4",
+    "-o", output_template,
+    "--no-playlist",
+    url
             ]
         else:
             if quality == "best":
