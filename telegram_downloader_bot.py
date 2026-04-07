@@ -6,7 +6,6 @@
 """
 
 import os
-import asyncio
 import tempfile
 import subprocess
 import json
@@ -18,9 +17,9 @@ from telegram.ext import (
 )
 
 # ==================== الإعدادات ====================
-import os
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "8430195653:AAFboRTMriG9Eh5zFYvRHDe0697JfuUNAjk")
-ALLOWED_USER_ID = 1599638825  
+ALLOWED_USER_ID = 1599638825
+YT_DLP = "yt-dlp"
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -36,11 +35,12 @@ def is_authorized(user_id: int) -> bool:
 async def get_video_info(url: str) -> dict | None:
     try:
         result = subprocess.run(
-    ["/root/.venv/bin/yt-dlp", "--dump-json", "--no-playlist", url],
+            [YT_DLP, "--dump-json", "--no-playlist", "--no-warnings", url],
             capture_output=True, text=True, timeout=30
         )
         if result.returncode == 0:
             return json.loads(result.stdout)
+        logger.error(f"yt-dlp stderr: {result.stderr}")
         return None
     except Exception as e:
         logger.error(f"خطأ في جلب معلومات الفيديو: {e}")
@@ -79,7 +79,6 @@ async def handle_url(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     url = update.message.text.strip()
 
-    # التحقق من أن الرسالة رابط
     if not (url.startswith("http://") or url.startswith("https://")):
         await update.message.reply_text("⚠️ أرسل رابط صحيح يبدأ بـ http أو https")
         return
@@ -96,11 +95,9 @@ async def handle_url(update: Update, context: ContextTypes.DEFAULT_TYPE):
     mins = int(duration) // 60
     secs = int(duration) % 60
 
-    # حفظ الرابط للاستخدام لاحقاً
     context.user_data["url"] = url
     context.user_data["title"] = title
 
-    # أزرار اختيار الصيغة
     keyboard = [
         [
             InlineKeyboardButton("🎬 MP4 (فيديو)", callback_data="format_mp4"),
@@ -125,16 +122,14 @@ async def format_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_authorized(query.from_user.id):
         return
 
-    fmt = query.data.split("_")[1]  # mp4 أو mp3
+    fmt = query.data.split("_")[1]
     context.user_data["format"] = fmt
 
     if fmt == "mp3":
-        # MP3 لا يحتاج اختيار جودة — تحميل مباشر
         await query.edit_message_text("⬇️ جاري تحميل الصوت بأعلى جودة...")
         await download_and_send(query, context, "mp3", "best")
         return
 
-    # خيارات جودة MP4
     keyboard = [
         [InlineKeyboardButton("🔵 1080p (Full HD)", callback_data="quality_1080")],
         [InlineKeyboardButton("🟢 720p (HD)", callback_data="quality_720")],
@@ -171,11 +166,10 @@ async def download_and_send(query, context: ContextTypes.DEFAULT_TYPE, fmt: str,
     with tempfile.TemporaryDirectory() as tmpdir:
         output_template = os.path.join(tmpdir, "%(title)s.%(ext)s")
 
-        # بناء أمر yt-dlp
         if fmt == "mp3":
             cmd = [
-    "/root/.venv/bin/yt-dlp",
-    "-x", "--audio-format", "mp3"
+                YT_DLP,
+                "-x", "--audio-format", "mp3",
                 "--audio-quality", "0",
                 "-o", output_template,
                 "--no-playlist",
@@ -186,13 +180,14 @@ async def download_and_send(query, context: ContextTypes.DEFAULT_TYPE, fmt: str,
                 fmt_selector = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
             else:
                 fmt_selector = (
-    f"bestvideo[height<={quality}]+bestaudio"
-    f"/best[height<={quality}]"
-    f"/best"
+                    f"bestvideo[height<={quality}]+bestaudio"
+                    f"/best[height<={quality}]"
+                    f"/best"
                 )
             cmd = [
-    "/root/.venv/bin/yt-dlp",
-    "-x", "--audio-format", "mp3"
+                YT_DLP,
+                "-f", fmt_selector,
+                "--merge-output-format", "mp4",
                 "-o", output_template,
                 "--no-playlist",
                 url
@@ -205,11 +200,10 @@ async def download_and_send(query, context: ContextTypes.DEFAULT_TYPE, fmt: str,
                 logger.error(f"yt-dlp error: {result.stderr}")
                 await query.edit_message_text(
                     "❌ فشل التحميل.\n"
-                    f"السبب: {result.stderr[-200:] if result.stderr else 'غير معروف'}"
+                    f"السبب: {result.stderr[-300:] if result.stderr else 'غير معروف'}"
                 )
                 return
 
-            # البحث عن الملف المحمّل
             files = os.listdir(tmpdir)
             if not files:
                 await query.edit_message_text("❌ لم يُعثر على الملف بعد التحميل.")
@@ -218,7 +212,6 @@ async def download_and_send(query, context: ContextTypes.DEFAULT_TYPE, fmt: str,
             file_path = os.path.join(tmpdir, files[0])
             file_size = os.path.getsize(file_path)
 
-            # تيليجرام يقبل حتى 50MB
             if file_size > 50 * 1024 * 1024:
                 await query.edit_message_text(
                     f"⚠️ حجم الملف كبير جداً ({file_size // (1024*1024)} MB).\n"
